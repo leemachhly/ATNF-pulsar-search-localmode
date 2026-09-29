@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pulsar Query Center · ATNF</title>
+<style>
+  /* ===== Blue bg / white text (default) ===== */
+  :root, [data-theme="blue"] {
+    --bg: #0b3d91;
+    --bg2: #1257b8;
+    --panel: #1565c0;
+    --panel2: #1976d2;
+    --border: #64b5f6;
+    --text: #ffffff;
+    --muted: #e3f2fd;
+    --accent: #ffffff;
+    --accent2: #bbdefb;
+    --ok: #c8e6c9;
+    --warn: #ffe082;
+    --bad: #ffcdd2;
+    --chip: #1976d2;
+    --chip-text: #ffffff;
+    --val-bg: #0d47a1;
+    --val-text: #ffffff;
+    --th-bg: #0d47a1;
+    --th-text: #e3f2fd;
+    --input-bg: #0d47a1;
+    --input-text: #ffffff;
+    --input-border: #90caf9;
+    --btn-text: #0d47a1;
+    --btn-bg: #ffffff;
+    --shadow: rgba(0,0,0,0.25);
+    --row-hover: rgba(255,255,255,0.12);
+    --row-active: rgba(255,255,255,0.22);
+    --code-bg: #0d47a1;
+    --header-bg: linear-gradient(180deg, rgba(255,255,255,0.08), transparent);
+    --body-grad: radial-gradient(1200px 600px at 10% -10%, #1976d2 0%, var(--bg) 55%);
+  }
+
+  /* ===== Light theme ===== */
+  [data-theme="light"] {
+    --bg: #ffffff;
+    --bg2: #f5f7fb;
+    --panel: #ffffff;
+    --panel2: #f0f4f8;
+    --border: #c5d0dc;
+    --text: #111827;
+    --muted: #4b5563;
+    --accent: #1565c0;
+    --accent2: #0d47a1;
+    --ok: #15803d;
+    --warn: #b45309;
+    --bad: #b91c1c;
+    --chip: #e8eef6;
+    --chip-text: #111827;
+    --val-bg: #e8eef6;
+    --val-text: #111827;
+    --th-bg: #e8eef6;
+    --th-text: #111827;
+    --input-bg: #ffffff;
+    --input-text: #111827;
+    --input-border: #94a3b8;
+    --btn-text: #ffffff;
+    --btn-bg: #1565c0;
+    --shadow: rgba(15,23,42,0.10);
+    --row-hover: rgba(21,101,192,0.08);
+    --row-active: rgba(21,101,192,0.16);
+    --code-bg: #e8eef6;
+    --header-bg: linear-gradient(180deg, rgba(21,101,192,0.06), transparent);
+    --body-grad: linear-gradient(180deg, #f5f7fb 0%, var(--bg) 40%);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: var(--body-grad);
+    background-attachment: fixed;
+    color: var(--text); min-height: 100vh;
+  }
+  header {
+    padding: 18px 24px 10px; border-bottom: 1px solid var(--border);
+    background: var(--header-bg);
+  }
+  h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: 0.3px; }
+  h1 .tag {
+    display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: var(--btn-text); font-size: 11px; vertical-align: middle; font-weight: 600;
+  }
+  .sub { color: var(--muted); font-size: 13px; }
+  .layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; padding: 16px 24px 32px; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px; box-shadow: 0 10px 30px var(--shadow);
+  }
+  .searchbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  input[type="text"], select {
+    background: var(--input-bg); color: var(--input-text); border: 1px solid var(--input-border);
+    border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none;
+  }
+  input[type="text"] { min-width: 280px; flex: 1; }
+  input[type="text"]:focus, select:focus { border-color: var(--accent); }
+  select option { background: var(--input-bg); color: var(--input-text); }
+  button {
+    background: var(--btn-bg); color: var(--btn-text); border: 1px solid transparent;
+    border-radius: 10px; padding: 10px 16px;
+    font-size: 14px; cursor: pointer; font-weight: 600;
+  }
+  button.secondary {
+    background: transparent; border: 1px solid var(--border); color: var(--text);
+    font-weight: 500;
+  }
+  button:disabled { opacity: 0.55; cursor: not-allowed; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+  .chip {
+    background: var(--chip); border: 1px solid var(--border); color: var(--chip-text);
+    border-radius: 999px; padding: 4px 10px; font-size: 12px;
+  }
+  .chip b { color: var(--text); font-weight: 700; }
+  .chip.ok { border-color: var(--ok); color: var(--ok); }
+  .chip.warn { border-color: var(--warn); color: var(--warn); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+  th {
+    position: sticky; top: 0; background: var(--th-bg); color: var(--th-text);
+    cursor: pointer; user-select: none; z-index: 1; font-weight: 600;
+  }
+  th:hover { filter: brightness(1.08); }
+  td { color: var(--text); font-weight: 500; }
+  td.mono { background: var(--val-bg); color: var(--val-text); font-weight: 600; }
+  tr:hover td { background: var(--row-hover); }
+  tr:hover td.mono { background: var(--val-bg); filter: brightness(1.12); }
+  tr.active td { background: var(--row-active); }
+  tr.active td.mono { background: var(--val-bg); filter: brightness(1.2); }
+  .table-wrap { overflow: auto; max-height: calc(100vh - 280px); border-radius: 10px; border: 1px solid var(--border); }
+  .muted { color: var(--muted); }
+  .mono { font-family: Consolas, "SF Mono", Menlo, monospace; }
+  .detail h2 { margin: 0 0 4px; font-size: 20px; }
+  .detail .alias { color: var(--accent); font-size: 14px; margin-bottom: 10px; font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; margin-top: 10px; }
+  .kv {
+    background: var(--val-bg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 8px 10px;
+    color: var(--val-text);
+  }
+  .kv .k {
+    color: var(--val-text); opacity: 0.85;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.02em;
+  }
+  .kv .v {
+    font-size: 15px; margin-top: 3px; word-break: break-all;
+    color: var(--val-text); font-weight: 700;
+  }
+  .section-title { margin: 16px 0 8px; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; align-items: center; }
+  .msg { margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .msg.err { color: var(--bad); }
+  .msg.ok { color: var(--ok); }
+  .empty { padding: 28px; text-align: center; color: var(--muted); }
+  footer { padding: 0 24px 20px; color: var(--muted); font-size: 12px; }
+  code { background: var(--code-bg); color: var(--val-text); padding: 1px 6px; border-radius: 6px; font-weight: 600; }
+  .topline { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; }
+  .pill-tabs { display: flex; gap: 8px; margin: 12px 0 8px; flex-wrap: wrap; }
+  .pill {
+    padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border);
+    background: var(--chip); color: var(--chip-text); cursor: pointer; font-size: 12px;
+    font-weight: 600;
+  }
+  .pill.active {
+    color: var(--btn-text); border-color: transparent;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+  .switch-group {
+    display: inline-flex; gap: 0; border: 1px solid var(--border);
+    border-radius: 999px; overflow: hidden; background: var(--chip);
+  }
+  .switch-btn {
+    border: 0; border-radius: 0; padding: 8px 14px; font-size: 12px;
+    background: transparent; color: var(--chip-text); cursor: pointer; font-weight: 600;
+  }
+  .switch-btn.active {
+    background: var(--btn-bg); color: var(--btn-text);
+  }
+  .switch-btn[data-theme-btn="blue"].active {
+    background: #0d47a1; color: #ffffff;
+  }
+  .switch-btn[data-theme-btn="light"].active {
+    background: #ffffff; color: #111827;
+    box-shadow: inset 0 0 0 1px #c5d0dc;
+  }
+  .switch-btn[data-lang-btn="en"].active {
+    background: #0d47a1; color: #ffffff;
+  }
+  .switch-btn[data-lang-btn="zh"].active {
+    background: #ffffff; color: #111827;
+    box-shadow: inset 0 0 0 1px #c5d0dc;
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="topline">
+    <div>
+      <h1><span data-i18n="title">Pulsar Query Center</span> <span class="tag" data-i18n="titleTag">ATNF · Local</span></h1>
+      <div class="sub" data-i18n="subtitle">B / J name lookup · DM · RM · P0 · F1 · widths · binary params · extensible fields · auto-update every 14 days</div>
+    </div>
+    <div class="row-actions" style="margin:0">
+      <div class="switch-group" id="langSwitch" title="Language">
+        <button class="switch-btn active" data-lang-btn="en" type="button">EN</button>
+        <button class="switch-btn" data-lang-btn="zh" type="button">中文</button>
+      </div>
+      <div class="switch-group" id="themeSwitch" title="Theme">
+        <button class="switch-btn active" data-theme-btn="blue" type="button" data-i18n="themeBlue">Blue</button>
+        <button class="switch-btn" data-theme-btn="light" type="button" data-i18n="themeLight">Light</button>
+      </div>
+      <button class="secondary" id="btnRefresh" data-i18n="btnRefresh">Refresh</button>
+      <button class="secondary" id="btnUpdate" data-i18n="btnUpdate">Update ATNF</button>
+    </div>
+  </div>
+  <div class="meta" id="statusChips"></div>
+</header>
+
+<div class="layout">
+  <section class="card">
+    <div class="searchbar">
+      <input type="text" id="q" data-i18n-ph="searchPlaceholder" placeholder="Search J name / B name / keyword, e.g. J0826+2637 or B0823+26" />
+      <select id="field">
+        <option value="" data-i18n="optAllFields">All fields</option>
+        <option value="jname" data-i18n="optJname">J name only</option>
+        <option value="bname" data-i18n="optBname">B name only</option>
+        <option value="dm" data-i18n="optDm">DM range (e.g. 10,50)</option>
+      </select>
+      <button id="btnSearch" data-i18n="btnSearch">Search</button>
+      <button class="secondary" id="btnReset" data-i18n="btnReset">Reset</button>
+    </div>
+    <div class="pill-tabs" id="quickTabs">
+      <div class="pill active" data-q="" data-i18n="tagAll">All</div>
+      <div class="pill" data-q="B" data-i18n="tagHasB">Has B name</div>
+      <div class="pill" data-q="MSP" data-i18n="tagMSP">MSP</div>
+      <div class="pill" data-q="HE" data-i18n="tagHE">High-energy</div>
+      <div class="pill" data-q="binary" data-i18n="tagBinary">Binary</div>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl">
+        <thead><tr id="headRow"></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div class="empty" id="empty" style="display:none" data-i18n="empty">No matching pulsars</div>
+    </div>
+    <div class="msg" id="listMsg"></div>
+  </section>
+
+  <aside class="card detail" id="detailCard">
+    <div class="section-title" data-i18n="detail">Details</div>
+    <div id="detailBody" class="empty" data-i18n="detailHint">Click a pulsar in the table to view details</div>
+  </aside>
+</div>
+
+<footer>
+  <span data-i18n="footer">Source: ATNF Pulsar Catalogue (psrcat.db) · local SQLite · edit core_fields / display_fields in config.json · or use Add field to insert ATNF parameter names.</span>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+// ---- i18n: default English, optional Chinese ----
+const LANG_KEY = "pulsar_center_lang";
+const I18N = {
+  en: {
+    title: "Pulsar Query Center",
+    titleTag: "ATNF · Local",
+    subtitle: "B / J name lookup · DM · RM · P0 · F1 · widths · binary params · extensible fields · auto-update every 14 days",
+    themeBlue: "Blue",
+    themeLight: "Light",
+    btnRefresh: "Refresh",
+    btnUpdate: "Update ATNF",
+    btnSearch: "Search",
+    btnReset: "Reset",
+    searchPlaceholder: "Search J name / B name / keyword, e.g. J0826+2637 or B0823+26",
+    optAllFields: "All fields",
+    optJname: "J name only",
+    optBname: "B name only",
+    optDm: "DM range (e.g. 10,50)",
+    tagAll: "All",
+    tagHasB: "Has B name",
+    tagMSP: "MSP",
+    tagHE: "High-energy",
+    tagBinary: "Binary",
+    empty: "No matching pulsars",
+    detail: "Details",
+    detailHint: "Click a pulsar in the table to view details",
+    footer: "Source: ATNF Pulsar Catalogue (psrcat.db) · local SQLite · edit core_fields / display_fields in config.json · or use Add field to insert ATNF parameter names.",
+    // status chips
+    chipVersion: "Catalogue",
+    chipCount: "Pulsars",
+    chipWithB: "With B name",
+    chipLastUpdate: "Last update",
+    chipInterval: "Interval",
+    chipNextDue: "Next due",
+    chipNever: "never",
+    chipDays: "days",
+    chipOverdue: "Update overdue",
+    chipCacheOk: "Cache valid",
+    // labels
+    labJ: "J name",
+    labB: "B name",
+    labP0: "P0 (s)",
+    labF0: "F0 (Hz)",
+    labF1: "F1",
+    labDM: "DM",
+    labRM: "RM",
+    labRAJ: "RAJ",
+    labDECJ: "DECJ",
+    labS1400: "S1400",
+    labW50: "W50",
+    labW10: "W10",
+    labPB: "PB (d)",
+    labECC: "ECC",
+    labAGE: "AGE (yr)",
+    labBSURF: "Bsurf (G)",
+    labEDOT: "Edot",
+    labTYPE: "TYPE",
+    labASSOC: "ASSOC",
+    // detail
+    allFields: "All ATNF fields",
+    addFieldTitle: "Add to main columns",
+    addFieldPlaceholder: "ATNF field name, e.g. S1500 / DM1 / PX / MINMASS",
+    btnAddField: "Add field",
+    notFound: "Not found",
+    // messages
+    countMsg: "Total {n} rows",
+    truncated: " (truncated — refine search)",
+    searchFailed: "Search failed",
+    updating: "Updating from ATNF…",
+    updateFailed: "Last update failed: ",
+    confirmUpdate: "Download from ATNF and rebuild the local database?",
+    updateStarted: "Update started. Click Refresh in a moment.",
+    fieldAdded: "Field {name} added",
+    fail: "Failed",
+    derivedNote: "derived",
+  },
+  zh: {
+    title: "脉冲星参数查取中心",
+    titleTag: "ATNF · 本地",
+    subtitle: "B 名 / J 名 互查 · DM · RM · P0 · F1 · 宽度 · 双星参数 · 可扩展字段 · 默认 14 天自动更新",
+    themeBlue: "蓝底白字",
+    themeLight: "白底黑字",
+    btnRefresh: "刷新状态",
+    btnUpdate: "立即更新 ATNF",
+    btnSearch: "查询",
+    btnReset: "重置",
+    searchPlaceholder: "输入 J 名 / B 名 / 关键字，例如  J0826+2637  或  B0823+26",
+    optAllFields: "全部字段",
+    optJname: "仅 J 名",
+    optBname: "仅 B 名",
+    optDm: "DM 范围（如 10,50）",
+    tagAll: "全部",
+    tagHasB: "有 B 名",
+    tagMSP: "毫秒星",
+    tagHE: "高能关联",
+    tagBinary: "双星",
+    empty: "没有匹配的脉冲星",
+    detail: "详情",
+    detailHint: "点击左侧表格中的脉冲星查看详情",
+    footer: "数据源：ATNF Pulsar Catalogue（psrcat.db）· 本地 SQLite 查询 · 在 config.json 的 core_fields / display_fields 中可增删参数 · 或用「添加字段」把 ATNF 字段名加入配置。",
+    chipVersion: "目录版本",
+    chipCount: "脉冲星数",
+    chipWithB: "有 B 名",
+    chipLastUpdate: "上次更新",
+    chipInterval: "更新周期",
+    chipNextDue: "下次到期",
+    chipNever: "未",
+    chipDays: "天",
+    chipOverdue: "更新已到期",
+    chipCacheOk: "缓存有效",
+    labJ: "J 名",
+    labB: "B 名",
+    labP0: "P0 (s)",
+    labF0: "F0 (Hz)",
+    labF1: "F1",
+    labDM: "DM",
+    labRM: "RM",
+    labRAJ: "RAJ",
+    labDECJ: "DECJ",
+    labS1400: "S1400",
+    labW50: "W50",
+    labW10: "W10",
+    labPB: "PB (d)",
+    labECC: "ECC",
+    labAGE: "AGE (yr)",
+    labBSURF: "Bsurf (G)",
+    labEDOT: "Edot",
+    labTYPE: "TYPE",
+    labASSOC: "ASSOC",
+    allFields: "全部 ATNF 字段",
+    addFieldTitle: "添加到常用列",
+    addFieldPlaceholder: "ATNF 字段名，如 S1500 / DM1 / PX / MINMASS",
+    btnAddField: "添加字段",
+    notFound: "未找到",
+    countMsg: "共 {n} 条",
+    truncated: "（已截断，请细化搜索）",
+    searchFailed: "查询失败",
+    updating: "正在从 ATNF 更新…",
+    updateFailed: "上次更新失败: ",
+    confirmUpdate: "从 ATNF 下载并重建本地数据库？",
+    updateStarted: "已开始更新，请稍候点「刷新状态」",
+    fieldAdded: "已添加字段 {name}",
+    fail: "失败",
+    derivedNote: "derived",
+  },
+};
+
+let lang = "en";
+function t(key, vars) {
+  let s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+  if (vars) {
+    for (const k of Object.keys(vars)) s = s.replace("{" + k + "}", vars[k]);
+  }
+  return s;
+}
+
+function applyLang(name) {
+  lang = (name === "zh") ? "zh" : "en";
+  localStorage.setItem(LANG_KEY, lang);
+  document.documentElement.lang = (lang === "zh") ? "zh-CN" : "en";
+  document.title = t("title") + " · ATNF";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  document.querySelectorAll("#langSwitch .switch-btn").forEach(b => {
+    b.classList.toggle("active", b.dataset.langBtn === lang);
+  });
+  // re-render dynamic UI
+  if (lastStatus) renderChips(lastStatus);
+  renderList();
+  if (lastDetail !== undefined) renderDetail(lastDetail);
+}
+
+document.querySelectorAll("#langSwitch .switch-btn").forEach(b => {
+  b.onclick = () => applyLang(b.dataset.langBtn);
+});
+
+// ---- theme ----
+const THEME_KEY = "pulsar_center_theme";
+function applyTheme(name) {
+  const theme = (name === "light") ? "light" : "blue";
+  document.documentElement.setAttribute("data-theme", theme);
+  localStorage.setItem(THEME_KEY, theme);
+  document.querySelectorAll("[data-theme-btn]").forEach(b => {
+    b.classList.toggle("active", b.dataset.themeBtn === theme);
+  });
+}
+document.querySelectorAll("[data-theme-btn]").forEach(b => {
+  b.onclick = () => applyTheme(b.dataset.themeBtn);
+});
+applyTheme(localStorage.getItem(THEME_KEY) || "blue");
+
+let current = [];
+let sortKey = "jname";
+let sortAsc = true;
+let selected = null;
+let lastStatus = null;
+let lastDetail = null;
+
+function labelOf(c) {
+  const map = {
+    jname: "labJ", bname: "labB", p0: "labP0", f0: "labF0", f1: "labF1",
+    dm: "labDM", rm: "labRM", raj: "labRAJ", decj: "labDECJ",
+    s1400: "labS1400", w50: "labW50", w10: "labW10",
+    pb: "labPB", ecc: "labECC", age: "labAGE", bsurf: "labBSURF",
+    edot: "labEDOT", type: "labTYPE", assoc: "labASSOC",
+  };
+  return map[c] ? t(map[c]) : c;
+}
+
+const fmt = (v) => {
+  if (v === null || v === undefined || v === "") return "";
+  if (typeof v === "number") {
+    const a = Math.abs(v);
+    if (a !== 0 && (a < 1e-3 || a >= 1e6)) return v.toExponential(3);
+    return Number(v.toPrecision(6)).toString();
+  }
+  return String(v);
+};
+
+async function api(path, opts) {
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+function renderChips(st) {
+  lastStatus = st;
+  const items = [
+    `${t("chipVersion")} <b>${st.catalogue_version || "?"}</b>`,
+    `${t("chipCount")} <b>${st.n_pulsars}</b>`,
+    `${t("chipWithB")} <b>${st.n_with_bname}</b>`,
+    `${t("chipLastUpdate")} <b>${st.last_update || t("chipNever")}</b>`,
+    `${t("chipInterval")} <b>${st.interval_days} ${t("chipDays")}</b>`,
+    `${t("chipNextDue")} <b>${st.next_due || "-"}</b>`,
+  ];
+  $("statusChips").innerHTML = items.map(x => `<div class="chip">${x}</div>`).join("")
+    + (st.update_overdue
+        ? `<div class="chip warn">${t("chipOverdue")}</div>`
+        : `<div class="chip ok">${t("chipCacheOk")}</div>`);
+}
+
+function renderHead() {
+  const cols = ["jname","bname","p0","f0","f1","dm","rm","s1400","w50","w10","pb","type"];
+  $("headRow").innerHTML = cols.map(c =>
+    `<th data-k="${c}">${labelOf(c)}${sortKey===c ? (sortAsc?" ▲":" ▼") : ""}</th>`
+  ).join("");
+  $("headRow").querySelectorAll("th").forEach(th => {
+    th.onclick = () => {
+      const k = th.dataset.k;
+      if (sortKey === k) sortAsc = !sortAsc;
+      else { sortKey = k; sortAsc = true; }
+      renderList();
+    };
+  });
+}
+
+function renderList() {
+  renderHead();
+  const cols = ["jname","bname","p0","f0","f1","dm","rm","s1400","w50","w10","pb","type"];
+  const rows = [...current].sort((a,b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (typeof va === "number" && typeof vb === "number") return sortAsc ? va-vb : vb-va;
+    return sortAsc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+  $("tbody").innerHTML = rows.map(r => {
+    const tds = cols.map(c => `<td class="mono">${fmt(r[c])}</td>`).join("");
+    return `<tr data-j="${r.jname||""}" class="${selected===r.jname?"active":""}">${tds}</tr>`;
+  }).join("");
+  $("empty").style.display = rows.length ? "none" : "block";
+  $("listMsg").className = "msg";
+  $("listMsg").textContent = t("countMsg", {n: rows.length})
+    + (rows.length >= 500 ? t("truncated") : "");
+  $("tbody").querySelectorAll("tr").forEach(tr => {
+    tr.onclick = () => selectPulsar(tr.dataset.j || tr.cells[0].textContent.trim());
+  });
+}
+
+function kv(k, v) {
+  return `<div class="kv"><div class="k">${k}</div><div class="v mono">${fmt(v)}</div></div>`;
+}
+
+function renderDetail(item) {
+  lastDetail = item;
+  if (!item) {
+    $("detailBody").innerHTML = `<div class="empty">${t("notFound")}</div>`;
+    return;
+  }
+  const alias = [item.jname, item.bname].filter(Boolean).join("  ·  ");
+  const fields = item.fields || {};
+  const keys = Object.keys(fields).sort();
+  const main = [
+    kv(t("labJ"), item.jname), kv(t("labB"), item.bname || "—"),
+    kv(t("labP0"), item.p0), kv(t("labF0"), item.f0), kv(t("labF1"), item.f1),
+    kv(t("labDM"), item.dm), kv(t("labRM"), item.rm),
+    kv(t("labRAJ"), item.raj), kv(t("labDECJ"), item.decj),
+    kv(t("labS1400") + " (mJy)", item.s1400), kv(t("labW50"), item.w50), kv(t("labW10"), item.w10),
+    kv(t("labPB"), item.pb), kv(t("labECC"), item.ecc),
+    kv(t("labAGE"), item.age), kv(t("labBSURF"), item.bsurf), kv(t("labEDOT"), item.edot),
+    kv(t("labTYPE"), item.type), kv(t("labASSOC"), item.assoc),
+  ].join("");
+  $("detailBody").innerHTML = `
+    <h2>${item.jname || ""}</h2>
+    <div class="alias">${alias}</div>
+    <div class="grid2">${main}</div>
+    <div class="section-title">${t("allFields")}（${keys.length}）</div>
+    <div class="grid2">
+      ${keys.map(k => kv(k, fields[k])).join("")}
+    </div>
+    <div class="section-title">${t("addFieldTitle")}</div>
+    <div class="searchbar">
+      <input type="text" id="newField" placeholder="${t("addFieldPlaceholder")}" />
+      <button id="btnAddField">${t("btnAddField")}</button>
+    </div>
+  `;
+  const btn = $("btnAddField");
+  if (btn) btn.onclick = async () => {
+    const name = ($("newField").value || "").trim().toUpperCase();
+    if (!name) return;
+    const res = await api("/api/field", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({name, display: true})
+    });
+    alert(res.ok ? t("fieldAdded", {name}) : (res.error || t("fail")));
+  };
+}
+
+async function selectPulsar(name) {
+  if (!name) return;
+  selected = name;
+  renderList();
+  const res = await api(`/api/pulsar/${encodeURIComponent(name)}`);
+  renderDetail(res.item);
+}
+
+async function doSearch() {
+  const q = $("q").value.trim();
+  const field = $("field").value;
+  const res = await api(`/api/search?q=${encodeURIComponent(q)}&field=${encodeURIComponent(field)}&limit=500`);
+  if (!res.ok) {
+    $("listMsg").textContent = res.error || t("searchFailed");
+    $("listMsg").className = "msg err";
+    return;
+  }
+  current = res.items || [];
+  renderList();
+}
+
+async function refreshStatus() {
+  const res = await api("/api/status");
+  if (res.ok) renderChips(res.status);
+  const up = res.update || {};
+  if (up.running) {
+    $("listMsg").className = "msg";
+    $("listMsg").textContent = t("updating");
+  } else if (up.last_result && !up.last_result.ok) {
+    $("listMsg").textContent = t("updateFailed") + (up.last_result.stderr || up.last_result.stdout || "").slice(-200);
+    $("listMsg").className = "msg err";
+  }
+}
+
+$("btnSearch").onclick = doSearch;
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+$("btnReset").onclick = () => { $("q").value = ""; $("field").value = ""; doSearch(); };
+$("btnRefresh").onclick = refreshStatus;
+$("btnUpdate").onclick = async () => {
+  if (!confirm(t("confirmUpdate"))) return;
+  const res = await api("/api/update", { method: "POST", headers: {"Content-Type":"application/json"}, body: "{}" });
+  alert(res.ok ? t("updateStarted") : (res.error || t("fail")));
+  setTimeout(refreshStatus, 2000);
+};
+
+document.querySelectorAll("#quickTabs .pill").forEach(el => {
+  el.onclick = async () => {
+    document.querySelectorAll("#quickTabs .pill").forEach(p => p.classList.remove("active"));
+    el.classList.add("active");
+    const q = el.dataset.q;
+    $("q").value = "";
+    if (q === "B") $("field").value = "bname";
+    else if (q === "binary") { $("field").value = ""; $("q").value = ""; }
+    else $("field").value = "";
+    if (q === "B") { $("q").value = "B"; }
+    else if (q === "MSP") { $("q").value = "MSP"; $("field").value = ""; }
+    else if (q === "HE") { $("q").value = "HE"; $("field").value = ""; }
+    await doSearch();
+    if (q === "binary") {
+      current = current.filter(x => x.pb != null);
+      renderList();
+    }
+    if (q === "B") {
+      current = current.filter(x => x.bname);
+      renderList();
+    }
+  };
+});
+
+(async function init() {
+  applyLang(localStorage.getItem(LANG_KEY) || "en");
+  renderHead();
+  await refreshStatus();
+  await doSearch();
+  setInterval(refreshStatus, 30000);
+})();
+</script>
+</body>
+</html>

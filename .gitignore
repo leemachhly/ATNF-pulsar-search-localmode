@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Generated data (large; rebuild with update_db.py)
+data/psrcat.db
+data/pulsars.sqlite
+data/meta.json
+data/psrcat_pkg.tar.gz
+update.log
+
+# Local / OS
+.DS_Store
+Thumbs.db
+*.log
